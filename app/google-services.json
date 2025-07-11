@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "587903121982",
+    "firebase_url": "https://sensor-data-4d754-default-rtdb.firebaseio.com",
+    "project_id": "sensor-data-4d754",
+    "storage_bucket": "sensor-data-4d754.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:587903121982:android:32486a0d90932324586f6f",
+        "android_client_info": {
+          "package_name": "com.example.bank_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWMykp7lJxZYpLZRjMzAF7841iLN-ZpuA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
