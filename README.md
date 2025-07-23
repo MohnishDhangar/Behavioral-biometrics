@@ -70,6 +70,13 @@ This mobile application uses behavioral and sensor data from a user's interactio
 
 📊 Custom analytics dashboard
 
+---
+Watch demo here
+
+---
+APK to install the application:
+
+---
 ## 📦 Project Structure
 
 ```bash
