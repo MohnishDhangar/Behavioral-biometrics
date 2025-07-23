@@ -32,6 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -104,29 +106,26 @@ import kotlin.collections.listOf
 
 @Composable
 @Preview(showBackground = true)
-fun SetPinScreenPreview()
+fun CardsScreenPreview()
 {
     val previewNavController = rememberNavController()
 
-    SetPinScreen(
+    CardsScreen(
         navController = previewNavController
     )
 }
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
-fun SetPinScreen(navController: NavHostController) {
-
-    val navigateToRoute = "home_screen"
+fun CardsScreen(navController: NavHostController){
     val hazeState = rememberHazeState()
+    var CVVVisibility by remember { mutableStateOf(false) }
 
-    var upiID by remember { mutableStateOf("") }
-    val maxLenUsername = 10
-
-    val facultyGlyphic = FontFamily(
-        Font(R.font.faculty_glyphic_regular)
-    )
-    val gradientColors = listOf(Yellow, Red, Cyan, Magenta, Blue)
+    val icon = if (CVVVisibility){
+        painterResource(id = R.drawable.visibility_100dp)
+    }
+    else
+        painterResource(id = R.drawable.visibility_off_100dp)
 
     Box (
         modifier = Modifier
@@ -143,42 +142,10 @@ fun SetPinScreen(navController: NavHostController) {
                 .hazeSource(state = hazeState)
         )
 
-        Surface(
-            //shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .size(370.dp, 400.dp)
-                .align(Alignment.Center)
-                .offset(0.dp, 20.dp)
-                .clip(shape = RoundedCornerShape(66.dp))
-                .border(
-                    width = 3.dp,
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.9f),
-                            Color.White.copy(alpha = 0.2f),
-                        ),
-                    ),
-                    shape = RoundedCornerShape(66.dp)
-                )
-                .hazeEffect(
-                    state = hazeState,
-                    style = HazeStyle(
-                        White.copy(alpha = 0.1f),
-                        tint = HazeTint(
-                            Color(128, 128, 128, 90),
-                            BlendMode.Luminosity
-                        ),
-                        blurRadius = 14.dp,
-                        noiseFactor = 0f
-                    )
-                ),
-            color = Transparent
-        ) {  }
-
         Column(
             modifier = Modifier.fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.Top
         ) {
 
             NavigationBar(
@@ -219,149 +186,103 @@ fun SetPinScreen(navController: NavHostController) {
                     interactionSource = null
                 )
 
-                Spacer(Modifier
-                    .size(50.dp)
-                    .weight(5f))
+                Spacer(
+                    Modifier
+                        .size(50.dp)
+                        .weight(5f)
+                )
             }
 
             Text(
-                text = "Your UPI ID",
+                text = "Your Cards",
                 style = TextStyle(
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(11, 1, 59,255),
+                    color = Color(11, 1, 59, 255),
                     fontFamily = facultyGlyphic,
                 ),
                 modifier = Modifier
                     .padding(15.dp, 15.dp, 15.dp, 15.dp)
-                    .offset(10.dp, (-70).dp)
+                    .offset(10.dp, (0).dp)
+                    .size(340.dp, 40.dp),
+                textAlign = TextAlign.Left
+            )
+
+            Image(
+                painterResource(R.drawable.demo_credit_card),
+                contentDescription = "Credit Card",
+                modifier = Modifier
+                    .size(360.dp, 230.dp)
+                    .shadow(
+                        elevation = 10.dp,
+                        shape = RoundedCornerShape(10.dp),
+                        ambientColor = Color.Black,
+                        spotColor = Color.Black
+                    )
+            )
+
+            Text(
+                text = "CVV",
+                style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(11, 1, 59, 255),
+                    fontFamily = facultyGlyphic,
+                ),
+                modifier = Modifier
+                    .padding(15.dp, 15.dp, 15.dp, 15.dp)
+                    .offset(10.dp, (20).dp)
                     .size(340.dp, 40.dp),
                 textAlign = TextAlign.Left
             )
 
             TextField(
-                value = "username33@oksbi",
-                onValueChange =  {  },
-                modifier = Modifier
-                    .padding(0.dp, 0.dp , 0.dp, 0.dp)
-                    .size(350.dp, 60.dp)
-                    .offset(0.dp, (-150).dp),
+                value = "123",
+                onValueChange = {  },
                 textStyle = TextStyle(
-                    fontSize = 22.sp,
-                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.W300,
-                    color = Color(38, 37, 38, 255),
+                    color = Color.LightGray,
+                    fontFamily = FontFamily.SansSerif,
                 ),
-                singleLine = true,
+                modifier = Modifier
+                    .padding(15.dp, 0.dp, 15.dp, 0.dp)
+                    .size(340.dp, 60.dp)
+                    .offset(0.dp, (10).dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(
+                        BorderStroke(2.dp, Color.Gray),
+                        shape = RoundedCornerShape(10.dp)
+                    ),
                 enabled = false,
                 readOnly = true,
-                shape = Shapes().large,
-                colors = TextFieldColors(
-                    focusedLabelColor = LightGray,
-                    unfocusedLabelColor = LightGray,
-                    disabledLabelColor = Color.Black,
-                    errorLabelColor = Gray,
-                    focusedTextColor = White,
-                    unfocusedTextColor = Blue,
-                    focusedContainerColor = Transparent,
-                    unfocusedContainerColor = Transparent,
-                    unfocusedPrefixColor = White,
-                    focusedPrefixColor = Gray,
-                    unfocusedSuffixColor = Gray,
-                    focusedSuffixColor = Gray,
-                    focusedIndicatorColor = Gray,
-                    unfocusedIndicatorColor = Gray,
-                    focusedPlaceholderColor = Gray,
-                    unfocusedPlaceholderColor = Gray,
-                    focusedTrailingIconColor = Gray,
-                    unfocusedLeadingIconColor = Gray,
-                    focusedLeadingIconColor = Gray,
-                    unfocusedTrailingIconColor = Gray,
-                    focusedSupportingTextColor = Gray,
-                    unfocusedSupportingTextColor = Gray,
-                    disabledTextColor = Transparent,
-                    errorTextColor = Gray,
-                    disabledContainerColor = Transparent,
-                    cursorColor = Transparent,
-                    errorCursorColor = Gray,
-                    disabledIndicatorColor = Gray,
-                    errorIndicatorColor = Gray,
-                    disabledLeadingIconColor = Gray,
-                    errorLeadingIconColor = Gray,
-                    disabledTrailingIconColor = Gray,
-                    errorTrailingIconColor = Gray,
-                    disabledPlaceholderColor = Gray,
-                    errorPlaceholderColor = Gray,
-                    disabledSupportingTextColor = Gray,
-                    errorSupportingTextColor = Gray,
-                    disabledPrefixColor = Gray,
-                    errorPrefixColor = Gray,
-                    disabledSuffixColor = Gray,
-                    errorSuffixColor = Gray,
-                    errorContainerColor = Gray,
-                    textSelectionColors = TextSelectionColors(handleColor = Color.Magenta, backgroundColor = Blue),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(255, 255, 255, 150),
+                    unfocusedContainerColor = Color(255, 255, 255, 150),
+                    focusedIndicatorColor = Color.Gray,
+                    unfocusedIndicatorColor = Color.LightGray,
+                    disabledIndicatorColor = Color.Gray,
+                    focusedTextColor = Color(11, 1, 59, 255),
+                    unfocusedTextColor = Color(11, 1, 59, 255),
+                    disabledTextColor = Color.White,
+                    disabledContainerColor = Color.DarkGray
                 ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    showKeyboardOnFocus = true),
+                trailingIcon = {
+                    IconButton(onClick = { CVVVisibility = !CVVVisibility}) {
+                        Icon(
+                            painter = icon,
+                            contentDescription = "Password Icon",
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .size(80.dp),
+                            tint = Color(111, 221, 159, 255)
+                        )
+                    }
+                },
+                visualTransformation = if (CVVVisibility) VisualTransformation.None
+                else PasswordVisualTransformation( mask = 0xFE61.toChar())
+
             )
-
-            Text(
-                text = "Set MPIN",
-                style = TextStyle(
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.W300,
-                    color = Color.White,
-                    fontFamily = facultyGlyphic,
-                ),
-                modifier = Modifier
-                    .padding(15.dp, 15.dp, 15.dp, 15.dp)
-                    .offset(10.dp, (-100).dp)
-                    .size(340.dp, 40.dp),
-                textAlign = TextAlign.Left
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .offset(0.dp, (-160).dp)
-            ) {
-                repeat(6) { index ->
-                    PasswordChar()
-                }
-            }
-
-            ElevatedButton(
-                onClick = { navController.navigate("home_screen") },
-                modifier = Modifier
-                    .size(250.dp, 50.dp)
-                    .offset(0.dp, (-170).dp)
-                    .clickable { /**/ },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(21, 122, 175, 255), // Light color for button background
-                    contentColor = Color(212, 214, 236, 255) // Dark color for text
-                ),
-                shape = Shapes().small,
-                content = { Text(
-                    text = "Confirm",
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        fontFamily = FontFamily.SansSerif,
-                        fontWeight = FontWeight.W300,
-                        color = White,
-                    )) },
-            )
-
-            Icon(
-                painter = painterResource(R.drawable.bhim_upi_coloed),
-                contentDescription = null,
-                modifier = Modifier
-                    .offset(0.dp, (-20).dp)
-                    .size(100.dp),
-                tint = Color.White
-            )
-
         }
     }
 }

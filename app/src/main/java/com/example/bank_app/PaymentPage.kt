@@ -103,6 +103,8 @@ fun PaymentsPage(navController: NavHostController) {
 
     val navigateToHome = "home_screen"
 
+    var lastChangeTime by remember { mutableStateOf(System.currentTimeMillis()) }
+
     var accNum by remember { mutableStateOf("") }
     var ReenteredAccNum by remember { mutableStateOf("") }
     var ifsc by remember { mutableStateOf("") }
@@ -133,7 +135,7 @@ fun PaymentsPage(navController: NavHostController) {
     ) {
 
         Image(
-            painterResource(R.drawable.gradient_1),
+            painterResource(R.drawable.gradient_19),
             contentDescription = "Background",
             modifier = Modifier
                 .requiredSize(900.dp)
@@ -249,40 +251,47 @@ fun PaymentsPage(navController: NavHostController) {
 
             TextField(
                 value = accNum,
-                onValueChange = {if(it.length <= maxCharAcc)
-                {
-                    accNum = it
-                } },
+                onValueChange = { newText ->
+                    if (accNum.length <= maxCharAcc)
+                    {   val oldText = accNum
+                        lastChangeTime = logTextFieldBehavior(
+                            label = "Enter CVV",
+                            oldText = oldText,
+                            newText = newText,
+                            lastTimestamp = lastChangeTime
+                        )
+                        accNum = newText }
+                },
                 modifier = Modifier
                     .padding(0.dp, 0.dp , 10.dp, 0.dp)
                     .size(300.dp, 60.dp)
                     .offset(0.dp, 20.dp),
                 textStyle = TextStyle(
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = facultyGlyphic,
                     fontWeight = FontWeight.W100,
                     color = White,
                 ),
                 singleLine = true,
-                label = { Text("Enter Account Number",
+                label = { Text("Enter A/C Number",
                     modifier = Modifier
-                        .offset((-8).dp, 9.dp)) },
+                        .offset((0).dp, 6.dp)) },
                 shape = Shapes().large,
                 colors = TextFieldColors(
-                    focusedLabelColor = LightGray,
-                    unfocusedLabelColor = LightGray,
-                    disabledLabelColor = Color.Black,
+                    focusedLabelColor = White,
+                    unfocusedLabelColor = White,
+                    disabledLabelColor = Color.Red,
                     errorLabelColor = Gray,
                     focusedTextColor = White,
-                    unfocusedTextColor = Blue,
+                    unfocusedTextColor = LightGray,
                     focusedContainerColor = Transparent,
                     unfocusedContainerColor = Transparent,
                     unfocusedPrefixColor = White,
                     focusedPrefixColor = Gray,
                     unfocusedSuffixColor = Gray,
                     focusedSuffixColor = Gray,
-                    focusedIndicatorColor = Gray,
-                    unfocusedIndicatorColor = Gray,
+                    focusedIndicatorColor = White,
+                    unfocusedIndicatorColor = White,
                     focusedPlaceholderColor = Gray,
                     unfocusedPlaceholderColor = Gray,
                     focusedTrailingIconColor = Gray,
@@ -325,38 +334,45 @@ fun PaymentsPage(navController: NavHostController) {
 
             TextField(
                 value = ReenteredAccNum,
-                onValueChange = {if(it.length <= maxCharAcc)
-                {
-                    ReenteredAccNum = it
-                } },
+                onValueChange = { newText ->
+                    if (ReenteredAccNum.length <= maxCharAcc)
+                    {   val oldText = ReenteredAccNum
+                        lastChangeTime = logTextFieldBehavior(
+                            label = "Enter CVV",
+                            oldText = oldText,
+                            newText = newText,
+                            lastTimestamp = lastChangeTime
+                        )
+                        ReenteredAccNum = newText }
+                },
                 modifier = Modifier
                     .padding(0.dp, 0.dp , 10.dp, 0.dp)
                     .size(300.dp, 60.dp)
                     .offset(0.dp, 20.dp),
                 textStyle = TextStyle(
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = facultyGlyphic,
                     fontWeight = FontWeight.W100,
                     color = White,
                 ),
                 singleLine = true,
-                label = { Text("Re-enter Account Number", modifier = Modifier.offset((-8).dp, 9.dp)) },
+                label = { Text("Re-enter A/C Number", modifier = Modifier.offset((0).dp, 9.dp)) },
                 shape = Shapes().large,
                 colors = TextFieldColors(
-                    focusedLabelColor = LightGray,
-                    unfocusedLabelColor = LightGray,
-                    disabledLabelColor = Color.Black,
+                    focusedLabelColor = White,
+                    unfocusedLabelColor = White,
+                    disabledLabelColor = Color.Red,
                     errorLabelColor = Gray,
                     focusedTextColor = White,
-                    unfocusedTextColor = Blue,
+                    unfocusedTextColor = LightGray,
                     focusedContainerColor = Transparent,
                     unfocusedContainerColor = Transparent,
                     unfocusedPrefixColor = White,
                     focusedPrefixColor = Gray,
                     unfocusedSuffixColor = Gray,
                     focusedSuffixColor = Gray,
-                    focusedIndicatorColor = Gray,
-                    unfocusedIndicatorColor = Gray,
+                    focusedIndicatorColor = White,
+                    unfocusedIndicatorColor = White,
                     focusedPlaceholderColor = Gray,
                     unfocusedPlaceholderColor = Gray,
                     focusedTrailingIconColor = Gray,
@@ -399,38 +415,45 @@ fun PaymentsPage(navController: NavHostController) {
 
             TextField(
                 value = ifsc,
-                onValueChange = {if(it.length <= maxCharIFSC)
-                {
-                    ifsc = it
-                } },
+                onValueChange = { newText ->
+                    if (ifsc.length <= maxCharIFSC)
+                    {   val oldText = ifsc
+                        lastChangeTime = logTextFieldBehavior(
+                            label = "Enter CVV",
+                            oldText = oldText,
+                            newText = newText,
+                            lastTimestamp = lastChangeTime
+                        )
+                        ifsc = newText }
+                },
                 modifier = Modifier
                     .padding(0.dp, 0.dp , 10.dp, 0.dp)
                     .size(300.dp, 60.dp)
                     .offset(0.dp, 20.dp),
                 textStyle = TextStyle(
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontFamily = facultyGlyphic,
                     fontWeight = FontWeight.W100,
                     color = White,
                 ),
                 singleLine = true,
-                label = { Text("IFSC Code", modifier = Modifier.offset((-8).dp, 9.dp)) },
+                label = { Text("IFSC Code", modifier = Modifier.offset((0).dp, 9.dp)) },
                 shape = Shapes().large,
                 colors = TextFieldColors(
-                    focusedLabelColor = LightGray,
-                    unfocusedLabelColor = LightGray,
-                    disabledLabelColor = Color.Black,
+                    focusedLabelColor = White,
+                    unfocusedLabelColor = White,
+                    disabledLabelColor = Color.Red,
                     errorLabelColor = Gray,
                     focusedTextColor = White,
-                    unfocusedTextColor = Blue,
+                    unfocusedTextColor = LightGray,
                     focusedContainerColor = Transparent,
                     unfocusedContainerColor = Transparent,
                     unfocusedPrefixColor = White,
                     focusedPrefixColor = Gray,
                     unfocusedSuffixColor = Gray,
                     focusedSuffixColor = Gray,
-                    focusedIndicatorColor = Gray,
-                    unfocusedIndicatorColor = Gray,
+                    focusedIndicatorColor = White,
+                    unfocusedIndicatorColor = White,
                     focusedPlaceholderColor = Gray,
                     unfocusedPlaceholderColor = Gray,
                     focusedTrailingIconColor = Gray,
@@ -473,42 +496,48 @@ fun PaymentsPage(navController: NavHostController) {
 
             TextField(
                 value = amount,
-                onValueChange = {if(it.length <= maxCharIFSC)
-                {
-                    amount = it
-                } },
+                onValueChange = { newText ->
+                    val oldText = amount
+                        lastChangeTime = logTextFieldBehavior(
+                            label = "Enter CVV",
+                            oldText = oldText,
+                            newText = newText,
+                            lastTimestamp = lastChangeTime
+                        )
+                        amount = newText
+                },
                 modifier = Modifier
                     .padding(0.dp, 0.dp , 10.dp, 0.dp)
                     .size(300.dp, 60.dp)
                     .offset(0.dp, 20.dp),
                 textStyle = TextStyle(
-                    fontSize = 22.sp,
+                    fontSize = 19.sp,
                     fontFamily = facultyGlyphic,
                     //fontWeight = FontWeight.W100,
                     color = White,
                 ),
                 singleLine = true,
-                placeholder = { Text("0.00", fontSize = 24.sp, color = Color.LightGray) },
+                placeholder = { Text("0.00", fontSize = 22.sp, color = Color.LightGray) },
                 shape = Shapes().large,
                 leadingIcon = {Image(
                     painterResource(R.drawable.currency_rupee_100dp),
                     "Rupees"
                 )},
                 colors = TextFieldColors(
-                    focusedLabelColor = LightGray,
-                    unfocusedLabelColor = LightGray,
-                    disabledLabelColor = Color.Black,
+                    focusedLabelColor = White,
+                    unfocusedLabelColor = White,
+                    disabledLabelColor = Color.Red,
                     errorLabelColor = Gray,
                     focusedTextColor = White,
-                    unfocusedTextColor = Blue,
+                    unfocusedTextColor = LightGray,
                     focusedContainerColor = Transparent,
                     unfocusedContainerColor = Transparent,
                     unfocusedPrefixColor = White,
                     focusedPrefixColor = Gray,
                     unfocusedSuffixColor = Gray,
                     focusedSuffixColor = Gray,
-                    focusedIndicatorColor = Gray,
-                    unfocusedIndicatorColor = Gray,
+                    focusedIndicatorColor = White,
+                    unfocusedIndicatorColor = White,
                     focusedPlaceholderColor = Gray,
                     unfocusedPlaceholderColor = Gray,
                     focusedTrailingIconColor = Gray,
@@ -546,11 +575,11 @@ fun PaymentsPage(navController: NavHostController) {
             )
 
             Button(
-                onClick = { navController.navigate(navigateToHome) },
+                onClick = { navController.navigate("payment_success") },
                 modifier = Modifier
                     .padding(16.dp)
                     .size(300.dp, 55.dp)
-                    .offset(0.dp, 200.dp)
+                    .offset(0.dp, 170.dp)
                     .clickable(onClick = { /**/ })
                     .clip(shape = RoundedCornerShape(66.dp))
                     .border(

@@ -1,6 +1,7 @@
 package com.example.bank_app
 
 import android.annotation.SuppressLint
+import android.media.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
@@ -49,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,10 +63,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,34 +74,33 @@ import kotlinx.coroutines.launch
 @Composable
 fun NavigationDrawer() {
 
-    ///List of Navigation Items that will be clicked
     val items = listOf(
         NavigationItems(
             title = "Start Logging Data",
-            selectedIcon = Icons.Filled.Home,
-            unselectedIcon = Icons.Outlined.Home
+            selectedIcon = painterResource(R.drawable.search_60dp),
+            unselectedIcon = painterResource(R.drawable.search_60dp),
         ),
         NavigationItems(
             title = "Info",
-            selectedIcon = Icons.Filled.Info,
-            unselectedIcon = Icons.Outlined.Info
+            selectedIcon =painterResource(R.drawable.search_60dp),
+            unselectedIcon = painterResource(R.drawable.search_60dp),
         ),
         NavigationItems(
             title = "Edit",
-            selectedIcon = Icons.Filled.Edit,
-            unselectedIcon = Icons.Outlined.Edit,
+            selectedIcon = painterResource(R.drawable.search_60dp),
+            unselectedIcon = painterResource(R.drawable.search_60dp),
             badgeCount = 105
         ),
         NavigationItems(
             title = "Settings",
-            selectedIcon = Icons.Filled.Settings,
-            unselectedIcon = Icons.Outlined.Settings
+            selectedIcon = painterResource(R.drawable.search_60dp),
+            unselectedIcon = painterResource(R.drawable.search_60dp),
         )
     )
 
     //Remember Clicked index state
     var selectedItemIndex by rememberSaveable {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -127,7 +129,7 @@ fun NavigationDrawer() {
                         },
                         icon = {
                             Icon(
-                                imageVector = if (index == selectedItemIndex) {
+                                painter = if (index == selectedItemIndex) {
                                     item.selectedIcon
                                 } else item.unselectedIcon,
                                 contentDescription = item.title
@@ -147,284 +149,7 @@ fun NavigationDrawer() {
         },
         gesturesEnabled = true
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Transparent),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            NavigationBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .size(55.dp),
-                containerColor = Color(103, 104, 236, 255),
-                contentColor = White,
-                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
-            ) {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = {
-                        scope.launch {
-                            drawerState.apply {
-                                if (isClosed) open() else close()
-                            }
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.menu_50dp),
-                            contentDescription = "Home Icon",
-                            modifier = Modifier.size(33.dp),
-                            tint = White
-                        )
-                    },
-                    modifier = Modifier
-                        .clickable(null, LocalIndication.current, true, null) { /* Handle click */ }
-                        .background(Color.Transparent),
-                    enabled = true,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = Color(12, 122, 86, 255),
-                        unselectedIconColor = Gray,
-                        selectedTextColor = White,
-                        unselectedTextColor = Gray,
-                        selectedIndicatorColor = Color.Transparent,
-                        disabledIconColor = Gray,
-                        disabledTextColor = Gray
-                    ),
-                    interactionSource = null
-                )
 
-                Spacer(
-                    modifier = Modifier
-                        .size(200.dp, 0.dp)
-                )
-
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Handle click */ },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.search_60dp),
-                            contentDescription = "Home Icon",
-                            modifier = Modifier.size(33.dp),
-                            tint = White
-                        )
-                    },
-                    modifier = Modifier
-                        .clickable(null, LocalIndication.current, true, null) { /* Handle click */ }
-                        .background(Color.Transparent),
-                    enabled = true,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = Color(12, 122, 86, 255),
-                        unselectedIconColor = Gray,
-                        selectedTextColor = White,
-                        unselectedTextColor = Gray,
-                        selectedIndicatorColor = Color.Transparent,
-                        disabledIconColor = Gray,
-                        disabledTextColor = Gray
-                    ),
-                    interactionSource = null
-                )
-
-                BadgedBox(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .padding(5.dp),
-                    badge = {
-                        Badge(
-                            modifier = Modifier
-                                .size(15.dp)
-                                .offset(20.dp, 6.dp),
-                            containerColor = Color.Red,
-                            contentColor = White,
-                            content = { Text("1") }
-                        )
-                    },
-                    content = {
-                        Icon(
-                            painter = painterResource(R.drawable.notifications_70dp),
-                            contentDescription = "Notifications",
-                            modifier = Modifier.size(35.dp),
-                            tint = White
-                        )
-                    }
-                )
-            }
-
-            FloatingActionButton(
-                onClick = { /*navController.navigate("payment_screen") */},
-                modifier = Modifier
-                    .size(90.dp)
-                    .offset(0.dp, 365.dp),
-                containerColor = Color(12, 122, 86, 255),
-                contentColor = White,
-                shape = CircleShape,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.qr_code_scanner_80dp),
-                    contentDescription = "QR Scanner",
-                    modifier = Modifier
-                        .size(55.dp)
-                )
-            }
-
-            NavigationBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .size(70.dp)
-                    .clip(
-                        BottomNavBarShape(
-                            cornerRadius = 15.dp,
-                            dipHeight = 70.dp,
-                            dipWidth = 90.dp,
-                            dipControlOffset = 13.dp // Sets the beginning of the dip curve
-                        )
-                    ),
-                containerColor = Color(103, 104, 236, 255),
-                contentColor = White,
-                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 10.dp)
-            ) {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Handle click */ },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.assured_workload_100dp),
-                            contentDescription = "Home Icon",
-                            modifier = Modifier.size(33.dp),
-                            tint = White
-                        )
-                    },
-                    modifier = Modifier
-                        .clickable(null, LocalIndication.current, true, null) { /* Handle click */ }
-                        .background(Color.Transparent),
-                    enabled = true,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = Color(12, 122, 86, 255),
-                        unselectedIconColor = Gray,
-                        selectedTextColor = White,
-                        unselectedTextColor = Gray,
-                        selectedIndicatorColor = Color.Transparent,
-                        disabledIconColor = Gray,
-                        disabledTextColor = Gray
-                    ),
-                    interactionSource = null
-                )
-
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Handle click */ },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.credit_score_100dp),
-                            contentDescription = "Home Icon",
-                            modifier = Modifier.size(33.dp),
-                            tint = White
-                        )
-                    },
-                    modifier = Modifier
-                        .clickable(
-                            null,
-                            LocalIndication.current,
-                            true,
-                            null,
-                            null
-                        ) { /* Handle click */ }
-                        .background(Color.Transparent),
-                    enabled = true,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = Color(12, 122, 86, 255),
-                        unselectedIconColor = Gray,
-                        selectedTextColor = White,
-                        unselectedTextColor = Gray,
-                        selectedIndicatorColor = Color.Transparent,
-                        disabledIconColor = Gray,
-                        disabledTextColor = Gray
-                    ),
-                    interactionSource = null
-                )
-
-                Spacer(
-                    modifier = Modifier
-                        .size(35.dp, 0.dp)
-                )
-
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Handle click */ },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.currency_exchange_100dp),
-                            contentDescription = "Home Icon",
-                            modifier = Modifier.size(33.dp),
-                            tint = White
-                        )
-                    },
-                    modifier = Modifier
-                        .clickable(
-                            null,
-                            LocalIndication.current,
-                            true,
-                            null,
-                            null
-                        ) { /* Handle click */ }
-                        .background(Color.Transparent),
-                    enabled = true,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = Color(12, 122, 86, 255),
-                        unselectedIconColor = Gray,
-                        selectedTextColor = White,
-                        unselectedTextColor = Gray,
-                        selectedIndicatorColor = Color.Transparent,
-                        disabledIconColor = Gray,
-                        disabledTextColor = Gray
-                    ),
-                    interactionSource = null
-                )
-
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Handle click */ },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.wallet_100dp),
-                            contentDescription = "Home Icon",
-                            modifier = Modifier.size(33.dp),
-                            tint = White
-                        )
-                    },
-                    modifier = Modifier
-                        .clickable(
-                            null,
-                            LocalIndication.current,
-                            true,
-                            null,
-                            null
-                        ) { /* Handle click */ }
-                        .background(Color.Transparent),
-                    enabled = true,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemColors(
-                        selectedIconColor = Color(12, 122, 86, 255),
-                        unselectedIconColor = Gray,
-                        selectedTextColor = White,
-                        unselectedTextColor = Gray,
-                        selectedIndicatorColor = Color.Transparent,
-                        disabledIconColor = Gray,
-                        disabledTextColor = Gray
-                    ),
-                    interactionSource = null
-                )
-            }
-
-
-        }
     }
 }
 

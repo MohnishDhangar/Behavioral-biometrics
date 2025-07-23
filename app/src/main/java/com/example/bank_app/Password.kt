@@ -113,7 +113,7 @@ fun PasswordScreen(navController: NavHostController) {
     ) {
 
         Image(
-            painterResource(R.drawable.gradient_9),
+            painterResource(R.drawable.gradient_12),
             contentDescription = "Background",
             modifier = Modifier
                 //.rotate(180f)
@@ -143,10 +143,10 @@ fun PasswordScreen(navController: NavHostController) {
                     style = HazeStyle(
                         White.copy(alpha = 0.1f),
                         tint = HazeTint(
-                            Color(128, 128, 128, 200),
+                            Color(128, 128, 128, 0),
                             BlendMode.Luminosity
                         ),
-                        blurRadius = 2.dp,
+                        blurRadius = 30.dp,
                         noiseFactor = 0f
                     )
                 ),
@@ -220,10 +220,10 @@ fun PasswordScreen(navController: NavHostController) {
                         style = HazeStyle(
                             White.copy(alpha = 0.1f),
                             tint = HazeTint(
-                                Color(128, 128, 128, 200),
+                                Color(128, 128, 128, 40),
                                 BlendMode.Luminosity
                             ),
-                            blurRadius = 2.dp,
+                            blurRadius = 15.dp,
                             noiseFactor = 0f
                         )
                     ),
@@ -264,7 +264,7 @@ fun PasswordChar(
     LaunchedEffect(
         key1 = text,
     ) {
-        if (text.isNotEmpty()) {
+        if (text.length == maxChar) {
             focusManager.moveFocus(
                 focusDirection = FocusDirection.Next,
             )

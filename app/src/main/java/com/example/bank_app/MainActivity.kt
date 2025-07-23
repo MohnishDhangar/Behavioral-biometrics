@@ -1,6 +1,5 @@
 package com.example.bank_app
 
-import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -9,128 +8,157 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.Composable
+import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.Context
+import android.util.Log
+import android.view.MotionEvent
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.bank_app.ui.theme.BankAppTheme
-import com.google.firebase.Firebase
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.luminance
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.Transaction
-import com.google.firebase.database.database
+import com.google.firebase.database.FirebaseDatabase
+import org.json.JSONArray
+import org.json.JSONObject
+import org.tensorflow.lite.Interpreter
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import kotlin.collections.toFloatArray
+import kotlin.math.abs
+import kotlin.math.hypot
+import kotlin.math.ln
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 
 class MainActivity : ComponentActivity() {
 
-    // Firebase Realtime Database reference
+    companion object {
+        lateinit var globalBehaviorDataBatch: MutableList<BehaviorRecord>
+    }
+    val anomalyLogList = mutableStateListOf<AnomalyLogEntry>()
+
+    internal val showAnomalyDialog = mutableStateOf(false)
+    internal val anomalyDialogMessage = mutableStateOf("")
     private lateinit var database: DatabaseReference
-
-    // Unique session ID generated at app launch
-    private val sessionId: String = System.currentTimeMillis().toString()
-
-    // Firebase user ID placeholder (replace with actual user ID if using auth)
-    private val userId: String = "test_user"  // Replace with FirebaseAuth.getInstance().currentUser?.uid
-
-    // Android Sensor manager and listener
+    private val sessionId = System.currentTimeMillis().toString()
+    private val userId = "demo_data"
     private lateinit var sensorManager: SensorManager
+    private val sensorDataBatch = mutableListOf<SensorRecord>()
+    private val behaviorDataBatch = mutableListOf<BehaviorRecord>()
+    private val uploadHandler = Handler(Looper.getMainLooper())
+    private val uploadInterval: Long = 3_000
+
+
+
+    data class SensorRecord(val type: Int, val values: List<Float>, val timestamp: Long)
+    data class BehaviorRecord(val type: String, val timestamp: Long, val data: Map<String, Any>)
+
     private val sensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
-            val sensorType = event.sensor.type
             val timestamp = System.currentTimeMillis()
             val values = event.values.map { it }
-            sensorDataBatch.add(SensorRecord(sensorType, values, timestamp))
+            sensorDataBatch.add(SensorRecord(event.sensor.type, values, timestamp))
         }
-
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     }
 
-    // Data class for sensor records
-    data class SensorRecord(val type: Int, val values: List<Float>, val timestamp: Long)
-    private val sensorDataBatch = mutableListOf<SensorRecord>()
-
-    // Upload handler and interval
-    private val uploadHandler = Handler(Looper.getMainLooper())
-    private val uploadInterval: Long = 10_000  // 10 seconds
-
     private val uploadRunnable = object : Runnable {
         override fun run() {
-            if (sensorDataBatch.isNotEmpty()) {
-                val batchData = sensorDataBatch.map {
-                    mapOf(
-                        "type" to it.type,
-                        "values" to it.values,
-                        "timestamp" to it.timestamp
-                    )
-                }
-
-                // Push under user > session > autoBatchKey
-                val sessionRef = database
-                    .child("users")
-                    .child(userId)
-                    .child("sessions")
-                    .child(sessionId)
-
-                val batchKey = sessionRef.push().key
-                if (batchKey != null) {
-                    sessionRef.child(batchKey).setValue(batchData)
-                }
-
-                sensorDataBatch.clear()
+            val sessionRef = database.child("users").child(userId).child("sessions").child(sessionId)
+            val label = when (userId) {
+                "train_data" -> 0
+                in listOf("demo_data", "sachin_data", "aman_data") -> 1
+                else -> -1
             }
 
+            if (sensorDataBatch.isNotEmpty()) {
+                sessionRef.child("sensor").push().setValue(sensorDataBatch.map {
+                    mapOf("type" to it.type, "values" to it.values, "timestamp" to it.timestamp, "label" to label)
+                })
+            }
+
+            if (behaviorDataBatch.isNotEmpty()) {
+                sessionRef.child("behavior").push().setValue(behaviorDataBatch.map {
+                    mapOf("type" to it.type, "timestamp" to it.timestamp, "data" to it.data, "label" to label)
+                })
+            }
+
+            detectAnomalies()
+            sensorDataBatch.clear()
+            behaviorDataBatch.clear()
             uploadHandler.postDelayed(this, uploadInterval)
         }
     }
 
-    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        // Initialize Firebase
-        database = Firebase.database.reference
-
-        // Save session metadata
-        val sessionMillis = sessionId.removePrefix("session_").toLong()
-
-        val readableTime = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-            .apply { timeZone = java.util.TimeZone.getDefault() }
-            .format(java.util.Date(sessionMillis))
-
-        val metadata = mapOf(
-            "sessionId" to sessionId,
-            "startTime" to readableTime,
-            "device" to Build.MODEL,
-            "androidVersion" to Build.VERSION.SDK_INT
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT, // For light mode scrim
+                android.graphics.Color.TRANSPARENT  // For dark mode scrim
+            )
         )
 
-        database
-            .child("users")
-            .child(userId)
-            .child("sessions")
-            .child(sessionId)
-            .child("metadata")
-            .setValue(metadata)
+        database = FirebaseDatabase.getInstance().reference
+        globalBehaviorDataBatch = behaviorDataBatch
 
-        // Set up sensor manager and listeners
+        val label = when (userId) {
+            "train_data" -> 0
+            in listOf("demo_data", "sachin_data", "aman_data") -> 1
+            else -> -1
+        }
+
+        val readableTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            .apply { timeZone = TimeZone.getDefault() }
+            .format(Date(sessionId.toLong()))
+
+        database.child("users").child(userId).child("sessions").child(sessionId).child("metadata").setValue(
+            mapOf(
+                "sessionId" to sessionId,
+                "startTime" to readableTime,
+                "device" to Build.MODEL,
+                "androidVersion" to Build.VERSION.SDK_INT,
+                "label" to label
+            )
+        )
+
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-
-        val essentialSensorTypes = listOf(
+        val essentialSensors = listOf(
             Sensor.TYPE_ACCELEROMETER,
             Sensor.TYPE_GYROSCOPE,
             Sensor.TYPE_MAGNETIC_FIELD,
@@ -139,19 +167,50 @@ class MainActivity : ComponentActivity() {
             Sensor.TYPE_GRAVITY,
             Sensor.TYPE_LINEAR_ACCELERATION
         )
-
-        val sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL)
-        for (sensor in sensorList) {
-            if (sensor.type in essentialSensorTypes) {
-                sensorManager.registerListener(sensorListener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.getSensorList(Sensor.TYPE_ALL).forEach {
+            if (it.type in essentialSensors) {
+                sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_NORMAL)
             }
         }
 
-        // Start periodic upload
         uploadHandler.postDelayed(uploadRunnable, uploadInterval)
 
         setContent {
-            BankApp()
+
+            MaterialTheme {
+                val hazeState = remember { HazeState() }
+
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // Your main app content goes here
+                        // This content will be blurred when the dialog is shown over it
+                        BankApp(
+                            // Or your specific content background
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .hazeSource(// Apply haze to the background content
+                                    state = hazeState
+                                    // Default style usually works well, but you can customize
+                                ),
+                            anomalyLogList = anomalyLogList // Pass your actual list
+                        )
+
+                        // Composable AlertDialog that observes the state
+                        // and uses Haze for glassmorphism
+                        AnomalyAlertDialog(
+                            hazeState = hazeState, // Pass the HazeState
+                            showDialog = showAnomalyDialog.value,
+                            dialogMessage = anomalyDialogMessage.value,
+                            onDismiss = {
+                                showAnomalyDialog.value = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -160,26 +219,319 @@ class MainActivity : ComponentActivity() {
         sensorManager.unregisterListener(sensorListener)
         uploadHandler.removeCallbacks(uploadRunnable)
     }
+
+    // Touch tracking
+    private var lastTouchX = 0f
+    private var lastTouchY = 0f
+    private var lastTouchTime = 0L
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        val timestamp = System.currentTimeMillis()
+        if (event.pointerCount == 1) {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    lastTouchX = event.x
+                    lastTouchY = event.y
+                    lastTouchTime = timestamp
+                    behaviorDataBatch.add(BehaviorRecord("TouchDown", timestamp, mapOf(
+                        "x" to event.x,
+                        "y" to event.y,
+                        "pressure" to event.pressure,
+                        "size" to event.size
+                    )))
+                }
+                MotionEvent.ACTION_UP -> {
+                    behaviorDataBatch.add(BehaviorRecord("TouchUp", timestamp, mapOf(
+                        "x" to event.x,
+                        "y" to event.y,
+                        "pressure" to event.pressure
+                    )))
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dt = (timestamp - lastTouchTime).coerceAtLeast(1)
+                    val dx = event.x - lastTouchX
+                    val dy = event.y - lastTouchY
+                    val velocity = hypot(dx, dy) / dt * 1000
+                    behaviorDataBatch.add(BehaviorRecord("Swipe", timestamp, mapOf(
+                        "x" to event.x,
+                        "y" to event.y,
+                        "velocity" to velocity,
+                        "pressure" to event.pressure,
+                        "size" to event.size
+                    )))
+                    lastTouchX = event.x
+                    lastTouchY = event.y
+                    lastTouchTime = timestamp
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
+    private fun detectAnomalies() {
+        try {
+            val model = Interpreter(loadModelFile("model.tflite"))
+            val scalerArray = JSONArray(loadAssetText("scaler.json"))
+            val thresholdJson = JSONObject(loadAssetText("thresholds.json"))
+
+            val minArr = FloatArray(scalerArray.length()) { i ->
+                val obj = scalerArray.getJSONObject(i)
+                obj.getDouble("min").toFloat()
+            }
+
+            val maxArr = FloatArray(scalerArray.length()) { i ->
+                val obj = scalerArray.getJSONObject(i)
+                obj.getDouble("max").toFloat()
+            }
+
+            val featureList = mutableListOf<FloatArray>()
+            val recentSize = minOf(sensorDataBatch.size, behaviorDataBatch.size, 10)
+
+            for (i in 0 until recentSize) {
+                val b = behaviorDataBatch.getOrNull(behaviorDataBatch.size - recentSize + i)
+                val s = sensorDataBatch.getOrNull(sensorDataBatch.size - recentSize + i)
+                if (b == null || s == null) continue
+
+                val behaviorFeatures = floatArrayOf(
+                    (b.data["typingSpeed"] as? Number)?.toFloat() ?: 0f,
+                    (b.data["backspaceCount"] as? Number)?.toFloat() ?: 0f,
+                    (b.data["typedCharCount"] as? Number)?.toFloat() ?: 0f,
+                    ln(1f + ((b.data["velocity"] as? Number)?.toFloat() ?: 0f)),
+                    (b.data["pressure"] as? Number)?.toFloat() ?: 0f,
+                    (b.data["size"] as? Number)?.toFloat() ?: 0f,
+                    (b.data["x"] as? Number)?.toFloat() ?: 0f,
+                    (b.data["y"] as? Number)?.toFloat() ?: 0f
+                )
+
+                val sensorFeatures = FloatArray(3) { idx -> s.values.getOrNull(idx) ?: 0f }
+
+                val combined = behaviorFeatures + sensorFeatures // total = 11 features
+                if (combined.size != minArr.size) {
+                    Log.e("AnomalyDetection", "Feature size mismatch: expected ${minArr.size}, got ${combined.size}")
+                    return
+                }
+
+                val normalized = combined.mapIndexed { j, v ->
+                    val min = minArr[j]
+                    val max = maxArr[j]
+                    ((v - min) / (max - min + 1e-6f)).coerceIn(0f, 1f)
+                }.toFloatArray()
+
+                Log.d("AnomalyDetection", "Raw combined features: ${combined.joinToString()}")
+                Log.d("AnomalyDetection", "Normalized features: ${normalized.joinToString()}")
+
+                featureList.add(normalized)
+            }
+
+            if (featureList.size < 10) {
+                Log.d("AnomalyDetection", "Not enough data to run inference")
+                return
+            }
+
+            val input = arrayOf(featureList.toTypedArray())
+            val output = Array(1) { Array(10) { FloatArray(minArr.size) } }
+
+            model.run(input, output)
+
+            // Unscale output and input
+            val unscaledOutput = output[0].map { timestep ->
+                FloatArray(minArr.size) { j ->
+                    (timestep[j] * (maxArr[j] - minArr[j] + 1e-6f)) + minArr[j]
+                }
+            }
+
+            val unscaledInput = featureList.map { scaled ->
+                FloatArray(minArr.size) { j ->
+                    (scaled[j] * (maxArr[j] - minArr[j] + 1e-6f)) + minArr[j]
+                }
+            }
+
+            Log.d("AnomalyDetection", "Unscaled input[0]: ${unscaledInput[0].joinToString()}")
+            Log.d("AnomalyDetection", "Unscaled output[0]: ${unscaledOutput[0].joinToString()}")
+
+            val reconError = unscaledInput.zip(unscaledOutput).map { (orig, pred) ->
+                orig.zip(pred).sumOf { (a, b) -> abs(a - b).toDouble() }
+            }.average().toFloat()
+
+            Log.d("AnomalyDetection", "Recon error: $reconError")
+
+            val mode = detectInteractionMode(unscaledInput[0])
+
+            val thresholdsTyping = mapOf(
+                "low" to 20f,
+                "medium" to 30f,
+                "high" to 40f,
+                "extreme" to 50f
+            )
+            val thresholdsSwiping = mapOf(
+                "low" to 450f,
+                "medium" to 550f,
+                "high" to 650f,
+                "extreme" to 700f
+            )
+
+            val thresholds = if (mode == "typing") thresholdsTyping else thresholdsSwiping
+
+            Log.d("AnomalyDetection", "Mode: $mode")
+            Log.d("AnomalyDetection", "Recon error: $reconError")
+            Log.d("AnomalyDetection", "Thresholds → $thresholds")
+
+            val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+            when {
+                reconError > thresholds["extreme"]!! -> {
+                    showAlert("🚨 Extreme $mode anomaly!\nScore: $reconError")
+                    anomalyLogList.add(AnomalyLogEntry(timestamp, "Extreme", reconError))
+                }
+                reconError > thresholds["high"]!! -> {
+                    showAlert("🚨 High $mode anomaly!\nScore: $reconError")
+                    anomalyLogList.add(AnomalyLogEntry(timestamp, "High", reconError))
+                }
+                reconError > thresholds["medium"]!! -> {
+                    showAlert("🚨 Medium $mode anomaly!\nScore: $reconError")
+                    anomalyLogList.add(AnomalyLogEntry(timestamp, "Medium", reconError))
+                }
+                reconError > thresholds["low"]!! -> {
+                    showAlert("🚨 Low $mode anomaly!\nScore: $reconError")
+                    anomalyLogList.add(AnomalyLogEntry(timestamp, "Low", reconError))
+                }
+                else -> Log.d("AnomalyDetection", "✅ No anomaly detected.")
+
+
+            }
+
+
+
+        } catch (e: Exception) {
+            Log.e("AnomalyDetection", "Error in detection: ${e.message}", e)
+        }
+    }
+
+    private fun detectInteractionMode(unscaled: FloatArray): String {
+        val typingSpeed = unscaled.getOrNull(0) ?: 0f      // index 0: typingSpeed
+        val typedCharCount = unscaled.getOrNull(2) ?: 0f   // index 2: typedCharCount
+        val swipeVelocity = unscaled.getOrNull(3) ?: 0f    // index 3: swipeVelocity
+
+        return when {
+            typingSpeed > 0f || typedCharCount > 0f -> "typing"
+            swipeVelocity > 0f -> "swiping"
+            else -> "unknown"
+        }
+    }
+
+    private fun loadModelFile(name: String): MappedByteBuffer {
+        val fileDescriptor = assets.openFd(name)
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        return inputStream.channel.map(FileChannel.MapMode.READ_ONLY, fileDescriptor.startOffset, fileDescriptor.declaredLength)
+    }
+
+    private fun loadAssetText(name: String): String {
+        return assets.open(name).bufferedReader().use { it.readText() }
+    }
+
+    /*private fun showAlert(msg: String) {
+        runOnUiThread {
+            AlertDialog.Builder(this)
+                .setTitle("Anomaly Alert")
+                .setMessage(msg)
+                .setPositiveButton("OK", null)
+                .show()
+        }
+    }*/
+
+    private fun showAlert(msg: String) {
+        runOnUiThread {
+            anomalyDialogMessage.value = msg
+            showAnomalyDialog.value = true
+        }
+    }
+}
+
+fun logTextFieldBehavior(
+    label: String,
+    oldText: String,
+    newText: String,
+    lastTimestamp: Long
+): Long {
+    val currentTimestamp = System.currentTimeMillis()
+    val timeTaken = currentTimestamp - lastTimestamp
+    val backspaceCount = if (newText.length < oldText.length) oldText.length - newText.length else 0
+    val typedCharCount = if (newText.length > oldText.length) newText.length - oldText.length else 0
+
+    val record = MainActivity.BehaviorRecord(
+        type = "Typing",
+        timestamp = currentTimestamp,
+        data = mapOf(
+            "field" to label,
+            "oldText" to oldText,
+            "newText" to newText,
+            "typedCharCount" to typedCharCount,
+            "backspaceCount" to backspaceCount,
+            "typingSpeed" to if (typedCharCount > 0) typedCharCount.toFloat() / (timeTaken / 1000.0) else 0f,
+            "duration" to timeTaken
+        )
+    )
+    MainActivity.globalBehaviorDataBatch.add(record)
+
+    return currentTimestamp
+}
+
+fun logDebugMetrics(
+    context: Context,
+    rawFeatures: FloatArray,
+    normalized: FloatArray,
+    reconError: Float
+) {
+    try {
+        val logDir = File(context.filesDir, "debug_logs")
+        if (!logDir.exists()) {
+            logDir.mkdirs()
+        }
+
+        val logFile = File(logDir, "anomaly_debug_log.txt")
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+        val logEntry = buildString {
+            appendLine("Timestamp: $timestamp")
+            appendLine("Raw Features: ${rawFeatures.joinToString(", ")}")
+            appendLine("Normalized: ${normalized.joinToString(", ")}")
+            appendLine("Recon Error: $reconError")
+            appendLine("--------------------------------------------------")
+        }
+
+        FileOutputStream(logFile, true).bufferedWriter().use { writer ->
+            writer.write(logEntry)
+        }
+
+        Log.d("AnomalyLogger", "✅ Debug metrics logged")
+
+    } catch (e: Exception) {
+        Log.e("AnomalyLogger", "❌ Error logging debug metrics", e)
+    }
 }
 
 
-@OptIn(ExperimentalComposeUiApi::class)
-@Preview(showBackground = true)
-@Composable
-fun BankApp() {
-    val navController = rememberNavController()
 
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun BankApp(modifier: Modifier = Modifier, anomalyLogList: List<AnomalyLogEntry>) {
+    val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "intro_screen") {
         composable("intro_screen") {
             IntroScreen(navController = navController)
         }
 
-        composable("password_screen") {
+        composable(
+            "password_screen",
+        ) {
             PasswordScreen(navController = navController)
         }
 
-        composable("home_screen") {
+        composable(
+            route = "home_screen"
+        ) {
             HomeScreen(navController = navController)
         }
 
@@ -192,6 +544,10 @@ fun BankApp() {
         }
 
         composable("pin_screen") {
+            UPIPayScreen(navController = navController)
+        }
+
+        composable("set_pin_screen") {
             SetPinScreen(navController = navController)
         }
 
@@ -203,6 +559,22 @@ fun BankApp() {
             PayToContact(navController = navController)
         }
 
-        // Add more destinations here
+        composable("pay_with_card") {
+            CardPayScreen(navController = navController)
+
+        }
+        composable("change_cvv") {
+            ChangeCVV(navController = navController)
+        }
+        composable("my_cards") {
+            CardsScreen(navController = navController)
+        }
+        composable("payment_success") {
+            PaymentAnimation(navController = navController)
+        }
+
+        composable("dashboard") {
+            AnomalyDashboard(navController = navController, anomalyLogList = anomalyLogList)
+        }
     }
 }

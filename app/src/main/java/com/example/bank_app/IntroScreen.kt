@@ -1,234 +1,246 @@
 package com.example.bank_app
 
-import androidx.compose.foundation.Image
-import androidx.compose.animation.slideInVertically
-import androidx.compose.ui.res.painterResource
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.foundation.Image
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ShapeDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Cyan
-import androidx.compose.ui.graphics.Color.Companion.Gray
-import androidx.compose.ui.graphics.Color.Companion.Magenta
-import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.HazeDefaults
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
-
+import kotlinx.coroutines.delay
 
 @Composable
 @Preview(showBackground = true)
-fun IntroScreenPreview()
-{
+fun IntroScreenPreview() {
     val previewNavController = rememberNavController()
-
     IntroScreen(previewNavController)
 }
 
 @Composable
 fun IntroScreen(navController: NavHostController) {
-
     val navigateToPassword = "password_screen"
     val navigateToRegister = "register_screen"
 
     val hazeState = rememberHazeState()
+    val gradientColors = listOf(Color.Cyan, Color.Gray, Color.Magenta)
+    val facultyGlyphic = FontFamily(Font(R.font.faculty_glyphic_regular))
 
-    val gradientColors = listOf(Cyan, Gray, Magenta /*...*/)
-    var visible by remember { mutableStateOf(true) }
-    val facultyGlyphic = FontFamily(
-        Font(R.font.faculty_glyphic_regular)
+    // --- Animation States ---
+    var currentProgress by remember { mutableStateOf(0f) }
+    val animatedProgress by animateFloatAsState(
+        targetValue = currentProgress,
+        animationSpec = tween(durationMillis = 4000),
+        label = "IntroProgressAnimation"
     )
 
+    var logoAndTextVisible by remember { mutableStateOf(false) }
+    var buttonsVisible by remember { mutableStateOf(false) }
+
+    val targetLogoOffsetY = (-100).dp
+    var currentLogoOffsetY by remember { mutableStateOf(0.dp) }
+    val animatedLogoOffsetY by animateDpAsState(
+        targetValue = currentLogoOffsetY,
+        animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing),
+        label = "LogoOffsetAnimation"
+    )
+
+    LaunchedEffect(Unit) {
+        currentProgress = 1f
+        logoAndTextVisible = true
+    }
+
+    LaunchedEffect(animatedProgress) {
+        if (animatedProgress == 1f) {
+            currentLogoOffsetY = targetLogoOffsetY
+            delay(200)
+            buttonsVisible = true
+        }
+    }
+
     Box(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
     ) {
-        Image(
-            painterResource(R.drawable.gradient_9),
-            contentDescription = "Background",
-            modifier = Modifier
-                .requiredSize(900.dp)
-                .hazeSource(state = hazeState)
-        )
+
+        VideoBackground(videoUri = getVideoUri(R.raw.moving_gradient_3))
+
         Column(
             modifier = Modifier
-                .fillMaxHeight(),
+                .fillMaxSize()
+                .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
-            AnimatedVisibility(
-                visible = visible,
-                enter =
-                        slideInVertically(
-                            initialOffsetY = { -50 },
-
-                        ),
-                label = "Logo Fade In/Out",
-            ) {
-                Text(
-                    modifier = Modifier
-                        .offset(0.dp, 80.dp),
-                    text = buildAnnotatedString {
-                        withStyle(
-                            SpanStyle(
-                                brush = Brush.linearGradient(
-                                    colors = gradientColors
-                                ),
-                                fontSize = 50.sp,
-                                fontFamily = facultyGlyphic,
-                                fontWeight = FontWeight.W200
-                            )
-                        ) {
-                            append("App Name")
-                        }
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(modifier = Modifier.offset(y = animatedLogoOffsetY)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    AnimatedVisibility(
+                        visible = logoAndTextVisible,
+                        enter = slideInVertically(
+                            initialOffsetY = { fullHeight -> -fullHeight / 2 },
+                            animationSpec = tween(durationMillis = 1200, delayMillis = 200, easing = LinearOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(durationMillis = 1200, delayMillis = 200)),
+                        label = "LogoSlideIn",
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.alpine_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(200.dp),
+                            tint = Color(180, 87, 229, 255)
+                        )
                     }
-                )
-                Icon(
-                    painter = painterResource(R.drawable.alpine_logo),
-                    contentDescription = null,
+
+                    AnimatedVisibility(
+                        visible = logoAndTextVisible,
+                        enter = slideInVertically(
+                            initialOffsetY = { fullHeight -> -fullHeight },
+                            animationSpec = tween(durationMillis = 2000, easing = LinearOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(durationMillis = 2000)),
+                        label = "AppNameSlideIn",
+                    ) {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(
+                                    SpanStyle(
+                                        brush = Brush.linearGradient(colors = gradientColors),
+                                        fontSize = 50.sp,
+                                        fontFamily = facultyGlyphic,
+                                        fontWeight = FontWeight.W200
+                                    )
+                                ) { append("Alpine") }
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(100.dp)) // Space for logo to move up
+
+            // Buttons remain here, will be pushed up by the main column's verticalArrangement
+            // and the padding at the bottom of the Column
+            AnimatedVisibility(
+                visible = buttonsVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight / 2 },
+                    animationSpec = tween(durationMillis = 800, easing = LinearOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(durationMillis = 800)),
+                label = "RegisterButtonSlideIn"
+            ) {
+                Button(
+                    onClick = { navController.navigate(navigateToRegister) },
                     modifier = Modifier
-                        .size(250.dp)
-                        .offset(0.dp, (-100).dp),
-                    tint = Color(214, 117, 229, 255)
+                        .padding(bottom = 16.dp)
+                        .fillMaxWidth(0.85f)
+                        .height(55.dp)
+                        .clip(shape = RoundedCornerShape(66.dp))
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.5f),
+                                    Color.White.copy(alpha = 0.2f),
+                                ),
+                            ),
+                            shape = RoundedCornerShape(66.dp)
+                        )
+                        .hazeEffect(
+                            state = hazeState,
+                            style = HazeStyle(
+                                Color.White.copy(alpha = 0.1f),
+                                tint = HazeTint(Color(128, 128, 128, 200), androidx.compose.ui.graphics.BlendMode.Luminosity),
+                                blurRadius = 2.dp,
+                                noiseFactor = 0f
+                            )
+                        ),
+                    content = { Text("Register", fontSize = 22.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.W300) },
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Color.Transparent
+                    ),
+                    shape = ShapeDefaults.Medium
                 )
             }
 
-            Button(
-                onClick = { navController.navigate(navigateToRegister) },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .size(350.dp, 55.dp)
-                    .clickable(onClick = { /**/ })
-                    .clip(shape = RoundedCornerShape(66.dp))
-                    .border(
-                        width = 1.dp,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.5f),
-                                Color.White.copy(alpha = 0.2f),
+            AnimatedVisibility(
+                visible = buttonsVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight / 2 },
+                    animationSpec = tween(durationMillis = 800, delayMillis = 150, easing = LinearOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(durationMillis = 800, delayMillis = 150)),
+                label = "LoginButtonSlideIn"
+            ) {
+                Button(
+                    onClick = { navController.navigate(navigateToPassword) },
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(55.dp)
+                        .clip(shape = RoundedCornerShape(66.dp))
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.5f),
+                                    Color.White.copy(alpha = 0.2f),
+                                ),
                             ),
-                        ),
-                        shape = RoundedCornerShape(66.dp)
-                    )
-                    .hazeEffect(
-                        state = hazeState,
-                        style = HazeStyle(
-                            White.copy(alpha = 0.1f),
-                            tint = HazeTint(
-                                Color(128, 128, 128, 200),
-                                BlendMode.Luminosity
-                            ),
-                            blurRadius = 2.dp,
-                            noiseFactor = 0f
+                            shape = RoundedCornerShape(66.dp)
                         )
+                        .hazeEffect(
+                            state = hazeState,
+                            style = HazeStyle(
+                                Color.White.copy(alpha = 0.1f),
+                                tint = HazeTint(Color(128, 128, 128, 200), androidx.compose.ui.graphics.BlendMode.Luminosity),
+                                blurRadius = 2.dp,
+                                noiseFactor = 0f
+                            )
+                        ),
+                    content = { Text("Log In", fontSize = 22.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.W300) },
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Color.Transparent
                     ),
-                content = { Text(
-                    text = "Register",
-                    fontSize = 22.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.W300) },
-                colors = ButtonColors(
-                    contentColor = Color.White,
-                    containerColor = Color.Transparent,
-                    disabledContentColor = Gray,
-                    disabledContainerColor = Color.Gray),
-                shape = ShapeDefaults.Medium
-            )
+                    shape = ShapeDefaults.Medium
+                )
+            }
+        }
 
-            Button(
-                onClick = { navController.navigate(navigateToPassword) },
+        if (animatedProgress < 1f) {
+            LinearProgressIndicator(
+                progress = { animatedProgress },
                 modifier = Modifier
-                    .padding(16.dp)
-                    .size(350.dp, 55.dp)
-                    .clickable(onClick = { /* Handle click */ })
-                    .clip(shape = RoundedCornerShape(66.dp))
-                    .border(
-                        width = 1.dp,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.5f),
-                                Color.White.copy(alpha = 0.2f),
-                            ),
-                        ),
-                        shape = RoundedCornerShape(66.dp)
-                    )
-                    .hazeEffect(
-                        state = hazeState,
-                        style = HazeStyle(
-                            White.copy(alpha = 0.1f),
-                            tint = HazeTint(
-                                Color(128, 128, 128, 200),
-                                BlendMode.Luminosity
-                            ),
-                            blurRadius = 2.dp,
-                            noiseFactor = 0f
-                        )
-                    ),
-                content = { Text(
-                                text = "Log In",
-                                fontSize = 22.sp,
-                                fontFamily = FontFamily.SansSerif,
-                                fontWeight = FontWeight.W300) },
-                colors = ButtonColors(
-                                    contentColor = Color.White,
-                                    containerColor = Color.Transparent,
-                                    disabledContentColor = Gray,
-                                    disabledContainerColor = Color(0xFF609C10)),
-                shape = ShapeDefaults.Medium
+                    .fillMaxWidth()
+                    .height(15.dp)
+                    .align(Alignment.BottomCenter),
+                color = Color(46, 2, 112, 255),
+                trackColor = Color(229, 167, 230, 150),
+                strokeCap = StrokeCap.Square
             )
         }
+        // If you want to keep the space occupied by the progress bar even when it's hidden:
+        // else if (buttonsVisible) { // Only add spacer if buttons are visible to avoid initial large gap
+        //     Spacer(Modifier.fillMaxWidth().height(13.dp).padding(bottom = 16.dp).align(Alignment.BottomCenter))
+        // }
     }
 }

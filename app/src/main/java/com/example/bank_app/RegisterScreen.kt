@@ -1,47 +1,29 @@
 package com.example.bank_app
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.material3.Badge
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.TextSelectionColors
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
@@ -58,15 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Brush.Companion.linearGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.LightGray
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -74,14 +53,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import dev.chrisbanes.haze.HazeStyle
@@ -101,13 +75,14 @@ fun RegisterScreenPreview(){
 @Composable
 fun RegisterScreen(navController: NavHostController) {
 
-    val navigateToHome = "home_screen"
     val navigateToIntro = "intro_screen"
+
+    var lastChangeTime by remember { mutableStateOf(System.currentTimeMillis()) }
 
     val hazeState = rememberHazeState()
 
     var name by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
+    var userName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     val maxLenName = 12
@@ -133,7 +108,7 @@ fun RegisterScreen(navController: NavHostController) {
     ) {
 
         Image(
-            painterResource(R.drawable.gradient_9),
+            painterResource(R.drawable.gradient_15),
             contentDescription = "Background",
             modifier = Modifier
                 //.rotate(180f)
@@ -226,22 +201,28 @@ fun RegisterScreen(navController: NavHostController) {
 
             TextField(
                 value = name,
-                onValueChange = {if(it.length <= 8)
-                {
-                    name = it
-                } },
+                onValueChange =  { newText ->
+                    val oldText = name
+                    lastChangeTime = logTextFieldBehavior(
+                        label = "Name",
+                        oldText = oldText,
+                        newText = newText,
+                        lastTimestamp = lastChangeTime
+                    )
+                    name = newText
+                },
                 modifier = Modifier
-                    .padding(0.dp, 0.dp , 10.dp, 0.dp)
+                    .padding(0.dp, 0.dp , 0.dp, 0.dp)
                     .size(300.dp, 60.dp)
                     .offset(0.dp, 20.dp),
                 textStyle = TextStyle(
                     fontSize = 18.sp,
                     fontFamily = facultyGlyphic,
-                    fontWeight = FontWeight.W100,
+                    fontWeight = FontWeight.W300,
                     color = White,
                 ),
                 singleLine = true,
-                label = { Text("Name", modifier = Modifier.offset((-8).dp, 9.dp)) },
+                label = { Text("Name", modifier = Modifier.offset((-8).dp, 0.dp)) },
                 shape = Shapes().large,
                 colors = TextFieldColors(
                     focusedLabelColor = LightGray,
@@ -299,11 +280,17 @@ fun RegisterScreen(navController: NavHostController) {
             )
 
             TextField(
-                value = username,
-                onValueChange = {if(it.length <= maxLenUsername)
-                {
-                    username = it
-                } },
+                value = userName,
+                onValueChange = { newText ->
+                    val oldText = userName
+                    lastChangeTime = logTextFieldBehavior(
+                        label = "Username",
+                        oldText = oldText,
+                        newText = newText,
+                        lastTimestamp = lastChangeTime
+                    )
+                    userName = newText
+                },
                 modifier = Modifier
                     .padding(0.dp, 0.dp , 10.dp, 0.dp)
                     .size(300.dp, 60.dp)
@@ -315,7 +302,7 @@ fun RegisterScreen(navController: NavHostController) {
                     color = White,
                 ),
                 singleLine = true,
-                label = { Text("Username", modifier = Modifier.offset((-8).dp, 9.dp)) },
+                label = { Text("Username", modifier = Modifier.offset((-8).dp, 0.dp)) },
                 shape = Shapes().large,
                 colors = TextFieldColors(
                     focusedLabelColor = LightGray,
@@ -374,10 +361,18 @@ fun RegisterScreen(navController: NavHostController) {
 
             TextField(
                 value = password,
-                onValueChange = {if(it.length <= 8)
-                {
-                    password = it
-                } },
+                onValueChange = { newText ->
+                    if (newText.length <= 6) {
+                        val oldText = password
+                        lastChangeTime = logTextFieldBehavior(
+                            label = "Password",
+                            oldText = oldText,
+                            newText = newText,
+                            lastTimestamp = lastChangeTime
+                        )
+                        password = newText
+                    }
+                },
                 modifier = Modifier
                     .padding(0.dp, 0.dp , 10.dp, 0.dp)
                     .size(300.dp, 60.dp)
@@ -389,7 +384,7 @@ fun RegisterScreen(navController: NavHostController) {
                     color = White,
                 ),
                 singleLine = true,
-                label = { Text("Password", modifier = Modifier.offset((-8).dp, 9.dp)) },
+                label = { Text("Password", modifier = Modifier.offset((-8).dp, 0.dp)) },
                 shape = Shapes().large,
                 colors = TextFieldColors(
                     focusedLabelColor = LightGray,
@@ -443,11 +438,15 @@ fun RegisterScreen(navController: NavHostController) {
             )
 
             Button(
-                onClick = { navController.navigate(navigateToHome) },
+                onClick = {
+                    if (userName.isNotBlank() && password.length == 6 && name.isNotBlank()) {
+                        navController.navigate("home_screen")
+                    }
+                },
                 modifier = Modifier
                     .padding(16.dp)
                     .size(300.dp, 55.dp)
-                    .offset(0.dp, 200.dp)
+                    .offset(0.dp, 150.dp)
                     .clickable(onClick = { /**/ })
                     .clip(shape = RoundedCornerShape(66.dp))
                     .border(

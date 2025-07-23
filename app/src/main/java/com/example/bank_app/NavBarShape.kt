@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 class BottomNavBarShape(
-    private val cornerRadius: Dp = 20.dp,
+    private val cornerRadius: Dp = 40.dp, // Single radius for all corners
     private val dipHeight: Dp = 40.dp,
     private val dipWidth: Dp = 60.dp,
     private val dipControlOffset: Dp = 15.dp
@@ -30,7 +30,7 @@ class BottomNavBarShape(
         layoutDirection: LayoutDirection,
         density: Density
     ): Outline {
-        val cornerRadiusPx = with(density) { cornerRadius.toPx() }
+        val cornerRadiusPx = with(density) { cornerRadius.toPx() } // Use this for all corners
         val dipHeightPx = with(density) { dipHeight.toPx() }
         val dipWidthPx = with(density) { dipWidth.toPx() }
         val dipControlOffsetPx = with(density) { dipControlOffset.toPx() }
@@ -39,25 +39,7 @@ class BottomNavBarShape(
         val midX = size.width / 2
 
         val path = Path().apply {
-            // Start from top-left, after the rounded corner
-            moveTo(cornerRadiusPx, 0f)
-
-            // Top edge left part leading to the pre-dip curve
-            lineTo(midX - halfDipWidth - dipControlOffsetPx , 0f)
-
-            // --- Curve into the dip (left side) ---
-            cubicTo(
-                x1 = midX - halfDipWidth - (dipControlOffsetPx / 2), // Control point 1: slightly towards the dip
-                y1 = 0f,
-                x2 = midX - halfDipWidth, // Control point 2: start of the main dip curve, but slightly pulled up
-                y2 = dipHeightPx * 0.2f,
-                x3 = midX - halfDipWidth - dipControlOffsetPx,
-                y3 = 0f, // Start curving down slightly before the main dip
-
-            )
-
-            // Reset and restart path definition for clarity with new curve logic
-            reset() // Clear previous path commands
+            reset()
 
             // Start from top-left, after the rounded corner
             moveTo(cornerRadiusPx, 0f)
@@ -67,29 +49,26 @@ class BottomNavBarShape(
             lineTo(preDipCurveStartX, 0f)
 
             // Smooth curve from flat top edge INTO the start of the main dip (left side)
-            // This curve will transition from (preDipCurveStartX, 0f)
-            // to (midX - halfDipWidth, 0f) but with a downward curve
             quadraticBezierTo(
-                x1 = midX - halfDipWidth - (dipControlOffsetPx / 2), // Control point, pulling the curve start downwards
-                y1 = 0f, // Keep y on the top edge initially for the control point
-                x2 = midX - halfDipWidth, // End of this pre-dip curve, start of main dip
-                y2 = dipHeightPx * 0.1f // Start the main dip slightly lower
+                x1 = midX - halfDipWidth - (dipControlOffsetPx / 2),
+                y1 = 0f,
+                x2 = midX - halfDipWidth,
+                y2 = dipHeightPx * 0.1f
             )
 
-
-            // Main Dip - upside down bell curve (quadratic Bezier curve)
+            // Main Dip - upside down bell curve
             quadraticBezierTo(
-                x1 = midX,                             // Control point for the main dip (center bottom of dip)
+                x1 = midX,
                 y1 = dipHeightPx,
-                x2 = midX + halfDipWidth,              // End of main dip on the right
-                y2 = dipHeightPx * 0.1f                // Mirror the y-start of the main dip
+                x2 = midX + halfDipWidth,
+                y2 = dipHeightPx * 0.1f
             )
 
             // Smooth curve FROM the end of the main dip back to the flat top edge (right side)
             quadraticBezierTo(
-                x1 = midX + halfDipWidth + (dipControlOffsetPx / 2), // Control point, pulling the curve end downwards
-                y1 = 0f, // Keep y on the top edge initially
-                x2 = midX + halfDipWidth + dipControlOffsetPx, // End of this pre-dip curve
+                x1 = midX + halfDipWidth + (dipControlOffsetPx / 2),
+                y1 = 0f,
+                x2 = midX + halfDipWidth + dipControlOffsetPx,
                 y2 = 0f
             )
 
@@ -107,14 +86,36 @@ class BottomNavBarShape(
                 forceMoveTo = false
             )
 
-            // Right edge
-            lineTo(size.width, size.height) // Corrected to account for bottom radius
+            // Right edge to the start of the bottom-right rounded corner
+            lineTo(size.width, size.height - cornerRadiusPx) // Use cornerRadiusPx
 
-            // Bottom edge
-            lineTo(0f, size.height)
+            // Bottom-right corner
+            arcTo(
+                rect = Rect(
+                    Offset(size.width - 2 * cornerRadiusPx, size.height - 2 * cornerRadiusPx), // Use cornerRadiusPx
+                    Size(2 * cornerRadiusPx, 2 * cornerRadiusPx) // Use cornerRadiusPx
+                ),
+                startAngleDegrees = 0f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false
+            )
 
-            // Left edge
-            lineTo(0f, cornerRadiusPx) // Corrected to account for top radius
+            // Bottom edge to the start of the bottom-left rounded corner
+            lineTo(cornerRadiusPx, size.height) // Use cornerRadiusPx
+
+            // Bottom-left corner
+            arcTo(
+                rect = Rect(
+                    Offset(0f, size.height - 2 * cornerRadiusPx), // Use cornerRadiusPx
+                    Size(2 * cornerRadiusPx, 2 * cornerRadiusPx) // Use cornerRadiusPx
+                ),
+                startAngleDegrees = 90f,
+                sweepAngleDegrees = 90f,
+                forceMoveTo = false
+            )
+
+            // Left edge to the start of the top-left rounded corner
+            lineTo(0f, cornerRadiusPx) // Use cornerRadiusPx
 
             // Top-left corner
             arcTo(
@@ -139,14 +140,14 @@ fun BottomNavBarShapePreviewWithDipCurves() {
     MaterialTheme {
         Box(
             modifier = Modifier
-                .size(width = 360.dp, height = 70.dp) // Adjusted preview size
+                .size(width = 360.dp, height = 70.dp)
                 .background(
                     color = MaterialTheme.colorScheme.primary,
                     shape = BottomNavBarShape(
-                        cornerRadius = 15.dp,
+                        cornerRadius = 20.dp, // Single radius for all corners
                         dipHeight = 70.dp,
                         dipWidth = 90.dp,
-                        dipControlOffset = 13.dp // Sets the beginning of the dip curve
+                        dipControlOffset = 13.dp
                     )
                 )
         )
