@@ -202,15 +202,10 @@ fun HomeScreen(navController: NavHostController) {
                         ),
                         shape = RoundedCornerShape(20.dp),
                         onClick = {
-                            //navController.navigate("dashboard")
-
                             selectedItemIndex = index
-
-                            /*
-                            scope.launch {
-                                drawerState.close()
-                            }*/
-
+                            if (item.title == "Dashboard") {
+                                navController.navigate("dashboard")
+                            }
                         },
                         icon = {
                             Icon(
@@ -343,7 +338,7 @@ fun HomeScreen(navController: NavHostController) {
                             width = 2.dp,
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.White.copy(alpha = 0.9f),
+                                    Color.White.copy(alpha = 0.7f),
                                     Color.White.copy(alpha = 0.3f),
                                 ),
                             ),
@@ -442,13 +437,13 @@ fun HomeScreen(navController: NavHostController) {
                     onClick = { /*navController.navigate("payment_screen") */},
                     modifier = Modifier
                         .size(60.dp)
-                        .offset((-134).dp, 85.dp)
+                        .offset((-138).dp, 85.dp)
                         .clip(CircleShape)
                         .border(
                             width = 2.dp,
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.White.copy(alpha = 0.9f),
+                                    Color.White.copy(alpha = 0.7f),
                                     Color.White.copy(alpha = 0.1f),
                                 ),
                             ),
@@ -515,7 +510,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -526,9 +521,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 120),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 20.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -638,9 +633,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -730,7 +725,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -741,9 +736,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -832,7 +827,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -843,9 +838,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -934,7 +929,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -945,9 +940,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -1033,7 +1028,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -1044,9 +1039,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -1131,7 +1126,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -1142,9 +1137,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -1229,7 +1224,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -1240,9 +1235,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -1327,7 +1322,7 @@ fun HomeScreen(navController: NavHostController) {
                                 width = 3.dp,
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
-                                        Color.White.copy(alpha = 0.9f),
+                                        Color.White.copy(alpha = 0.7f),
                                         Color.White.copy(alpha = 0.2f),
                                     ),
                                 ),
@@ -1338,9 +1333,9 @@ fun HomeScreen(navController: NavHostController) {
                                 style = HazeStyle(
                                     White,
                                     tint = HazeTint(
-                                        Color(128, 128, 128, 40),
+                                        Color(128, 128, 128, 50),
                                         BlendMode.Luminosity),
-                                    blurRadius = 10.dp,
+                                    blurRadius = 30.dp,
                                     noiseFactor = 40f)
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -1409,10 +1404,8 @@ fun HomeScreen(navController: NavHostController) {
                     )
                 }
             }
-
         }
     }
-
 }
 
 @Composable

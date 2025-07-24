@@ -15,14 +15,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.Composable
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Context
 import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
-import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -32,10 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.graphics.luminance
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import org.json.JSONArray
@@ -54,16 +47,12 @@ import kotlin.collections.toFloatArray
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.ln
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 
 class MainActivity : ComponentActivity() {
 
@@ -71,6 +60,10 @@ class MainActivity : ComponentActivity() {
         lateinit var globalBehaviorDataBatch: MutableList<BehaviorRecord>
     }
     val anomalyLogList = mutableStateListOf<AnomalyLogEntry>()
+
+    private val showHighAnomalyDialog = mutableStateOf(false)
+    private val showExtremeAnomalyDialog = mutableStateOf(false)
+    private val currentAnomalyScore = mutableStateOf(0f)
 
     internal val showAnomalyDialog = mutableStateOf(false)
     internal val anomalyDialogMessage = mutableStateOf("")
@@ -179,34 +172,37 @@ class MainActivity : ComponentActivity() {
 
             MaterialTheme {
                 val hazeState = remember { HazeState() }
-
+                val navController = rememberNavController()
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Your main app content goes here
-                        // This content will be blurred when the dialog is shown over it
                         BankApp(
-                            // Or your specific content background
                             modifier = Modifier
                                 .fillMaxSize()
-                                .hazeSource(// Apply haze to the background content
+                                .hazeSource(
                                     state = hazeState
-                                    // Default style usually works well, but you can customize
                                 ),
-                            anomalyLogList = anomalyLogList // Pass your actual list
+                            anomalyLogList = anomalyLogList,
+                            activity = this@MainActivity,
+                            navController = navController
                         )
 
-                        // Composable AlertDialog that observes the state
-                        // and uses Haze for glassmorphism
-                        AnomalyAlertDialog(
-                            hazeState = hazeState, // Pass the HazeState
-                            showDialog = showAnomalyDialog.value,
-                            dialogMessage = anomalyDialogMessage.value,
-                            onDismiss = {
-                                showAnomalyDialog.value = false
-                            }
+                        HighAnomalyAlertDialog(
+                            showDialog = showHighAnomalyDialog.value,
+                            onDismiss = { showHighAnomalyDialog.value = false },
+                            navController = navController, // Use the hoisted NavController
+                            hazeState = hazeState,
+                            anomalyScore = currentAnomalyScore.value
+                        )
+
+                        ExtremeAnomalyAlertDialog(
+                            showDialog = showExtremeAnomalyDialog.value,
+                            onDismiss = { showExtremeAnomalyDialog.value = false },
+                            navController = navController, // Use the hoisted NavController
+                            hazeState = hazeState,
+                            anomalyScore = currentAnomalyScore.value
                         )
                     }
                 }
@@ -379,30 +375,32 @@ class MainActivity : ComponentActivity() {
 
             val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
-            when {
-                reconError > thresholds["extreme"]!! -> {
-                    showAlert("🚨 Extreme $mode anomaly!\nScore: $reconError")
-                    anomalyLogList.add(AnomalyLogEntry(timestamp, "Extreme", reconError))
+            runOnUiThread {
+                currentAnomalyScore.value = reconError // Store score for dialogs
+                when {
+                    reconError > thresholds["extreme"]!! -> {
+                        Log.w("AnomalyDetection", "Extreme anomaly detected. Score: $reconError")
+                        anomalyLogList.add(AnomalyLogEntry(timestamp, "Extreme", reconError))
+                        showExtremeAnomalyDialog.value = true
+                    }
+                    reconError > thresholds["high"]!! -> {
+                        Log.w("AnomalyDetection", "High anomaly detected. Score: $reconError")
+                        anomalyLogList.add(AnomalyLogEntry(timestamp, "High", reconError))
+                        showHighAnomalyDialog.value = true
+                    }
+                    reconError > thresholds["medium"]!! -> {
+                        Log.i("AnomalyDetection", "Medium anomaly detected. Score: $reconError")
+                        anomalyLogList.add(AnomalyLogEntry(timestamp, "Medium", reconError))
+                    }
+                    reconError > thresholds["low"]!! -> {
+                        Log.i("AnomalyDetection", "Low anomaly detected. Score: $reconError")
+                        anomalyLogList.add(AnomalyLogEntry(timestamp, "Low", reconError))
+                    }
+                    else -> {
+                        Log.d("AnomalyDetection", "✅ No anomaly detected. Score: $reconError")
+                    }
                 }
-                reconError > thresholds["high"]!! -> {
-                    showAlert("🚨 High $mode anomaly!\nScore: $reconError")
-                    anomalyLogList.add(AnomalyLogEntry(timestamp, "High", reconError))
-                }
-                reconError > thresholds["medium"]!! -> {
-                    showAlert("🚨 Medium $mode anomaly!\nScore: $reconError")
-                    anomalyLogList.add(AnomalyLogEntry(timestamp, "Medium", reconError))
-                }
-                reconError > thresholds["low"]!! -> {
-                    showAlert("🚨 Low $mode anomaly!\nScore: $reconError")
-                    anomalyLogList.add(AnomalyLogEntry(timestamp, "Low", reconError))
-                }
-                else -> Log.d("AnomalyDetection", "✅ No anomaly detected.")
-
-
             }
-
-
-
         } catch (e: Exception) {
             Log.e("AnomalyDetection", "Error in detection: ${e.message}", e)
         }
@@ -429,16 +427,6 @@ class MainActivity : ComponentActivity() {
     private fun loadAssetText(name: String): String {
         return assets.open(name).bufferedReader().use { it.readText() }
     }
-
-    /*private fun showAlert(msg: String) {
-        runOnUiThread {
-            AlertDialog.Builder(this)
-                .setTitle("Anomaly Alert")
-                .setMessage(msg)
-                .setPositiveButton("OK", null)
-                .show()
-        }
-    }*/
 
     private fun showAlert(msg: String) {
         runOnUiThread {
@@ -515,18 +503,27 @@ fun logDebugMetrics(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun BankApp(modifier: Modifier = Modifier, anomalyLogList: List<AnomalyLogEntry>) {
-    val navController = rememberNavController()
+fun BankApp(modifier: Modifier = Modifier, anomalyLogList: List<AnomalyLogEntry>, activity: ComponentActivity,
+            navController: NavHostController
+) {
 
     NavHost(navController = navController, startDestination = "intro_screen") {
-        composable("intro_screen") {
-            IntroScreen(navController = navController)
+        composable(
+            route = "intro_screen?lockdown={lockdown}",
+            arguments = listOf(navArgument("lockdown") {
+                type = NavType.BoolType
+                defaultValue = false
+            })
+        ) { backStackEntry ->
+            IntroScreen(
+                navController = navController,
+                activity = activity,
+                startLockdown = backStackEntry.arguments?.getBoolean("lockdown") ?: false
+            )
         }
 
-        composable(
-            "password_screen",
-        ) {
-            PasswordScreen(navController = navController)
+        composable("password_screen") {
+            PasswordScreen(navController = navController, activity = activity)
         }
 
         composable(

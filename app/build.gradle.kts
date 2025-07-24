@@ -22,12 +22,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+            )
+        }
+        getByName("release") {
+            isCrunchPngs = true // Ensure this is true or not explicitly false
+            isMinifyEnabled = true    // Enables code shrinking, obfuscation, and optimization
+            isShrinkResources = true // Removes unused resources (requires minifyEnabled)
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro" // Your custom ProGuard rules
             )
         }
     }

@@ -22,66 +22,94 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.navigation.NavController
+import dev.chrisbanes.haze.HazeDefaults
+import dev.chrisbanes.haze.haze
+import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.hazeSource
 
 @Composable
-@Preview(showBackground = true)
-fun AnomalyAlertDialogPreview() {
-    AnomalyAlertDialog(
-        hazeState = HazeState(),
-        showDialog = true,
-        dialogMessage = "Critical Anomaly Detected!",
-        onDismiss = {}
-    )
-}
-
-@Composable
-fun AnomalyAlertDialog(
-    hazeState: HazeState,
+fun HighAnomalyAlertDialog(
     showDialog: Boolean,
-    dialogMessage: String,
-    onDismiss: () -> Unit // Lambda to handle dismissal
+    onDismiss: () -> Unit,
+    navController: NavController,
+    hazeState: HazeState,
+    anomalyScore: Float
 ) {
     if (showDialog) {
         AlertDialog(
             onDismissRequest = {
-                onDismiss() // Call the lambda when dismissal is requested
+                onDismiss()
             },
-            title = {
+            title = { Text("⚠️ High Anomaly Detected") },
+            text = {
                 Text(
-                    text = "Warning",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.LightGray
+                    "A high-risk activity pattern was detected (Score: ${"%.2f".format(anomalyScore)}).\n" +
+                            "For your security, please re-verify your identity."
                 )
             },
-            text = {
-                Text(text = dialogMessage, color = Color.White)
-            },
             confirmButton = {
-                TextButton(
-                    modifier = Modifier.size(50.dp).offset(0.dp, 15.dp),
-                    onClick = {
-                        onDismiss()
+                Button(onClick = {
+                    onDismiss() // Dismiss the dialog first
+                    navController.navigate("password_screen") { // Navigate to Password.kt screen
+                        // popUpTo("current_screen_route_before_password") { inclusive = true }
+                        launchSingleTop = true
                     }
-                ) {
-                    Text("OK")
+                }) {
+                    Text("OK (Re-Verify)")
                 }
             },
-            modifier = Modifier
-                .size(400.dp, 240.dp)
-                .padding(6.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .border(
-                    width = 2.dp,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.6f),
-                            Color.White.copy(alpha = 0.2f),
-                        ),
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                ),
-            shape = MaterialTheme.shapes.medium,
-            containerColor = Color(15, 2, 69, 255),
+            dismissButton = {
+                Button(onClick = {
+                    onDismiss()
+                }) {
+                    Text("Cancel")
+                }
+            },
+            modifier = Modifier.hazeSource(
+                state = hazeState
+            )
         )
     }
 }
+
+@Composable
+fun ExtremeAnomalyAlertDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    navController: NavController,
+    hazeState: HazeState,
+    anomalyScore: Float
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = {
+            },
+            title = { Text("🚨 Extreme Anomaly Detected") },
+            text = {
+                Text(
+                    "A critical security event was detected (Score: ${"%.2f".format(anomalyScore)}).\n" +
+                            "You will be redirected to the main screen. Access will be temporarily limited."
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    onDismiss() // Dismiss the dialog
+                    navController.navigate("intro_screen?lockdown=true") { // Navigate to IntroScreen with timer
+                        popUpTo("intro_screen") { inclusive = true } // Clear back stack to intro
+                        launchSingleTop = true
+                    }
+                }) {
+                    Text("OK")
+                }
+            },
+            modifier = Modifier.hazeSource(
+                state = hazeState
+            )
+        )
+    }
+}
+

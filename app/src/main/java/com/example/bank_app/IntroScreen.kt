@@ -1,5 +1,6 @@
 package com.example.bank_app
 
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.border
@@ -12,8 +13,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.DarkGray
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -25,6 +28,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import dev.chrisbanes.haze.HazeStyle
@@ -37,11 +41,20 @@ import kotlinx.coroutines.delay
 @Preview(showBackground = true)
 fun IntroScreenPreview() {
     val previewNavController = rememberNavController()
-    IntroScreen(previewNavController)
+    IntroScreen(
+        previewNavController,
+        activity = ComponentActivity(),
+        startLockdown = true
+    )
 }
 
 @Composable
-fun IntroScreen(navController: NavHostController) {
+fun IntroScreen(navController: NavHostController,
+                activity: ComponentActivity,
+                startLockdown: Boolean = false ) {
+
+    var buttonsEnabled by remember { mutableStateOf(!startLockdown) }
+    var countdown by remember { mutableStateOf(if (startLockdown) 10 else 0) }
     val navigateToPassword = "password_screen"
     val navigateToRegister = "register_screen"
 
@@ -78,6 +91,18 @@ fun IntroScreen(navController: NavHostController) {
             currentLogoOffsetY = targetLogoOffsetY
             delay(200)
             buttonsVisible = true
+        }
+    }
+
+    LaunchedEffect(key1 = startLockdown) {
+        if (startLockdown) {
+            buttonsEnabled = false
+            countdown = 10
+            while (countdown > 0 && activity.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                delay(1000L)
+                countdown--
+            }
+            buttonsEnabled = true
         }
     }
 
@@ -138,6 +163,17 @@ fun IntroScreen(navController: NavHostController) {
 
             Spacer(Modifier.height(100.dp)) // Space for logo to move up
 
+            if (startLockdown && countdown > 0) {
+                Text(
+                    text = "Access will be enabled in $countdown seconds",
+                    color = Color.LightGray,
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
+
             // Buttons remain here, will be pushed up by the main column's verticalArrangement
             // and the padding at the bottom of the Column
             AnimatedVisibility(
@@ -150,6 +186,7 @@ fun IntroScreen(navController: NavHostController) {
             ) {
                 Button(
                     onClick = { navController.navigate(navigateToRegister) },
+                    enabled = buttonsEnabled,
                     modifier = Modifier
                         .padding(bottom = 16.dp)
                         .fillMaxWidth(0.85f)
@@ -169,7 +206,7 @@ fun IntroScreen(navController: NavHostController) {
                             state = hazeState,
                             style = HazeStyle(
                                 Color.White.copy(alpha = 0.1f),
-                                tint = HazeTint(Color(128, 128, 128, 200), androidx.compose.ui.graphics.BlendMode.Luminosity),
+                                tint = HazeTint(Color(128, 128, 128, 200), BlendMode.Luminosity),
                                 blurRadius = 2.dp,
                                 noiseFactor = 0f
                             )
@@ -177,7 +214,8 @@ fun IntroScreen(navController: NavHostController) {
                     content = { Text("Register", fontSize = 22.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.W300) },
                     colors = ButtonDefaults.buttonColors(
                         contentColor = Color.White,
-                        containerColor = Color.Transparent
+                        containerColor = Color.Transparent,
+                        disabledContentColor = DarkGray
                     ),
                     shape = ShapeDefaults.Medium
                 )
@@ -193,6 +231,7 @@ fun IntroScreen(navController: NavHostController) {
             ) {
                 Button(
                     onClick = { navController.navigate(navigateToPassword) },
+                    enabled = buttonsEnabled,
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
                         .height(55.dp)
@@ -211,7 +250,7 @@ fun IntroScreen(navController: NavHostController) {
                             state = hazeState,
                             style = HazeStyle(
                                 Color.White.copy(alpha = 0.1f),
-                                tint = HazeTint(Color(128, 128, 128, 200), androidx.compose.ui.graphics.BlendMode.Luminosity),
+                                tint = HazeTint(Color(128, 128, 128, 200), BlendMode.Luminosity),
                                 blurRadius = 2.dp,
                                 noiseFactor = 0f
                             )
@@ -219,7 +258,8 @@ fun IntroScreen(navController: NavHostController) {
                     content = { Text("Log In", fontSize = 22.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.W300) },
                     colors = ButtonDefaults.buttonColors(
                         contentColor = Color.White,
-                        containerColor = Color.Transparent
+                        containerColor = Color.Transparent,
+                        disabledContentColor = DarkGray
                     ),
                     shape = ShapeDefaults.Medium
                 )
