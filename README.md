@@ -77,6 +77,16 @@ Watch demo here
 APK to install the application:
 
 ---
+
+TensorFlow Autoencoder Colab Notebooks:
+Training Notebook
+https://colab.research.google.com/drive/14TwYdYovwS-zkFgNrunuXhX3dBFAmHOP?usp=drive_link
+
+Testing Notebook
+https://colab.research.google.com/drive/1imxzIe9rwzVKwXks0_zZiu9PnnRfk6_7?usp=drive_link
+
+---
+
 ## 📦 Project Structure
 
 ```bash
