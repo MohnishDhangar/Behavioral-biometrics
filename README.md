@@ -72,19 +72,16 @@ This mobile application uses behavioral and sensor data from a user's interactio
 
 ---
 Watch demo here
-
 ---
 APK to install the application:
-
+https://drive.google.com/file/d/1lXDUH10SqjmvF9pIddhi6-sg-gCKF9s_/view?usp=drive_link
 ---
 
 TensorFlow Autoencoder Colab Notebooks:
 Training Notebook
 https://colab.research.google.com/drive/14TwYdYovwS-zkFgNrunuXhX3dBFAmHOP?usp=drive_link
-
 Testing Notebook
 https://colab.research.google.com/drive/1imxzIe9rwzVKwXks0_zZiu9PnnRfk6_7?usp=drive_link
-
 ---
 
 ## 📦 Project Structure
